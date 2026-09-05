@@ -1,0 +1,232 @@
+{
+  "generated_at": "2026-09-05T11:48:02.746609+00:00",
+  "step": "step03_target_adapters",
+  "seed_file": "D:\\adversarial-safety-lab\\data\\seeds.jsonl",
+  "seed_count": 15,
+  "adapters": [
+    {
+      "total_cases": 15,
+      "correct": 6,
+      "accuracy": 40.0,
+      "errors": {
+        "false_positive": 0,
+        "false_negative": 5,
+        "missed_review": 4,
+        "over_block": 0,
+        "unnecessary_review": 0,
+        "under_block": 0
+      },
+      "action_distribution": {
+        "allow": 15,
+        "review": 0,
+        "block": 0
+      },
+      "rates": {
+        "auto_allow_rate": 100.0,
+        "human_review_rate": 0.0,
+        "auto_block_rate": 0.0
+      },
+      "by_category": {
+        "benign": {
+          "total": 5,
+          "correct": 5,
+          "accuracy": 100.0
+        },
+        "harassment": {
+          "total": 1,
+          "correct": 0,
+          "accuracy": 0.0
+        },
+        "fraud": {
+          "total": 2,
+          "correct": 0,
+          "accuracy": 0.0
+        },
+        "threat": {
+          "total": 1,
+          "correct": 0,
+          "accuracy": 0.0
+        },
+        "deception": {
+          "total": 1,
+          "correct": 0,
+          "accuracy": 0.0
+        },
+        "edge_case": {
+          "total": 5,
+          "correct": 1,
+          "accuracy": 20.0
+        }
+      },
+      "adapter": "always_allow"
+    },
+    {
+      "total_cases": 15,
+      "correct": 5,
+      "accuracy": 33.3,
+      "errors": {
+        "false_positive": 6,
+        "false_negative": 0,
+        "missed_review": 0,
+        "over_block": 4,
+        "unnecessary_review": 0,
+        "under_block": 0
+      },
+      "action_distribution": {
+        "allow": 0,
+        "review": 0,
+        "block": 15
+      },
+      "rates": {
+        "auto_allow_rate": 0.0,
+        "human_review_rate": 0.0,
+        "auto_block_rate": 100.0
+      },
+      "by_category": {
+        "benign": {
+          "total": 5,
+          "correct": 0,
+          "accuracy": 0.0
+        },
+        "harassment": {
+          "total": 1,
+          "correct": 1,
+          "accuracy": 100.0
+        },
+        "fraud": {
+          "total": 2,
+          "correct": 2,
+          "accuracy": 100.0
+        },
+        "threat": {
+          "total": 1,
+          "correct": 1,
+          "accuracy": 100.0
+        },
+        "deception": {
+          "total": 1,
+          "correct": 1,
+          "accuracy": 100.0
+        },
+        "edge_case": {
+          "total": 5,
+          "correct": 0,
+          "accuracy": 0.0
+        }
+      },
+      "adapter": "always_block"
+    },
+    {
+      "total_cases": 15,
+      "correct": 10,
+      "accuracy": 66.7,
+      "errors": {
+        "false_positive": 2,
+        "false_negative": 0,
+        "missed_review": 0,
+        "over_block": 2,
+        "unnecessary_review": 1,
+        "under_block": 0
+      },
+      "action_distribution": {
+        "allow": 3,
+        "review": 3,
+        "block": 9
+      },
+      "rates": {
+        "auto_allow_rate": 20.0,
+        "human_review_rate": 20.0,
+        "auto_block_rate": 60.0
+      },
+      "by_category": {
+        "benign": {
+          "total": 5,
+          "correct": 3,
+          "accuracy": 60.0
+        },
+        "harassment": {
+          "total": 1,
+          "correct": 1,
+          "accuracy": 100.0
+        },
+        "fraud": {
+          "total": 2,
+          "correct": 2,
+          "accuracy": 100.0
+        },
+        "threat": {
+          "total": 1,
+          "correct": 1,
+          "accuracy": 100.0
+        },
+        "deception": {
+          "total": 1,
+          "correct": 1,
+          "accuracy": 100.0
+        },
+        "edge_case": {
+          "total": 5,
+          "correct": 2,
+          "accuracy": 40.0
+        }
+      },
+      "adapter": "keyword_moderator"
+    },
+    {
+      "total_cases": 15,
+      "correct": 15,
+      "accuracy": 100.0,
+      "errors": {
+        "false_positive": 0,
+        "false_negative": 0,
+        "missed_review": 0,
+        "over_block": 0,
+        "unnecessary_review": 0,
+        "under_block": 0
+      },
+      "action_distribution": {
+        "allow": 6,
+        "review": 4,
+        "block": 5
+      },
+      "rates": {
+        "auto_allow_rate": 40.0,
+        "human_review_rate": 26.7,
+        "auto_block_rate": 33.3
+      },
+      "by_category": {
+        "benign": {
+          "total": 5,
+          "correct": 5,
+          "accuracy": 100.0
+        },
+        "harassment": {
+          "total": 1,
+          "correct": 1,
+          "accuracy": 100.0
+        },
+        "fraud": {
+          "total": 2,
+          "correct": 2,
+          "accuracy": 100.0
+        },
+        "threat": {
+          "total": 1,
+          "correct": 1,
+          "accuracy": 100.0
+        },
+        "deception": {
+          "total": 1,
+          "correct": 1,
+          "accuracy": 100.0
+        },
+        "edge_case": {
+          "total": 5,
+          "correct": 5,
+          "accuracy": 100.0
+        }
+      },
+      "adapter": "regex_moderator"
+    }
+  ]
+}

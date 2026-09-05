@@ -1,0 +1,319 @@
+{
+  "generated_at": "2026-09-05T12:08:24.475132+00:00",
+  "step": "step05_attack_transformations",
+  "seed_file": "D:\\adversarial-safety-lab\\data\\seeds.jsonl",
+  "total_seed_count": 15,
+  "risk_seed_count": 9,
+  "attacks": [
+    "clean",
+    "paraphrase",
+    "indirect",
+    "fictional",
+    "academic",
+    "obfuscate"
+  ],
+  "results": {
+    "always_allow": {
+      "clean": {
+        "adapter": "always_allow",
+        "attack": "clean",
+        "total_risk_cases": 9,
+        "full_evasion": 9,
+        "partial_evasion": 0,
+        "contained": 0,
+        "over_contained": 0,
+        "attack_success_rate": 100.0,
+        "evasion_score": 100.0
+      },
+      "paraphrase": {
+        "adapter": "always_allow",
+        "attack": "paraphrase",
+        "total_risk_cases": 9,
+        "full_evasion": 9,
+        "partial_evasion": 0,
+        "contained": 0,
+        "over_contained": 0,
+        "attack_success_rate": 100.0,
+        "evasion_score": 100.0
+      },
+      "indirect": {
+        "adapter": "always_allow",
+        "attack": "indirect",
+        "total_risk_cases": 9,
+        "full_evasion": 9,
+        "partial_evasion": 0,
+        "contained": 0,
+        "over_contained": 0,
+        "attack_success_rate": 100.0,
+        "evasion_score": 100.0
+      },
+      "fictional": {
+        "adapter": "always_allow",
+        "attack": "fictional",
+        "total_risk_cases": 9,
+        "full_evasion": 9,
+        "partial_evasion": 0,
+        "contained": 0,
+        "over_contained": 0,
+        "attack_success_rate": 100.0,
+        "evasion_score": 100.0
+      },
+      "academic": {
+        "adapter": "always_allow",
+        "attack": "academic",
+        "total_risk_cases": 9,
+        "full_evasion": 9,
+        "partial_evasion": 0,
+        "contained": 0,
+        "over_contained": 0,
+        "attack_success_rate": 100.0,
+        "evasion_score": 100.0
+      },
+      "obfuscate": {
+        "adapter": "always_allow",
+        "attack": "obfuscate",
+        "total_risk_cases": 9,
+        "full_evasion": 9,
+        "partial_evasion": 0,
+        "contained": 0,
+        "over_contained": 0,
+        "attack_success_rate": 100.0,
+        "evasion_score": 100.0
+      }
+    },
+    "always_block": {
+      "clean": {
+        "adapter": "always_block",
+        "attack": "clean",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 0,
+        "contained": 5,
+        "over_contained": 4,
+        "attack_success_rate": 0.0,
+        "evasion_score": 0.0
+      },
+      "paraphrase": {
+        "adapter": "always_block",
+        "attack": "paraphrase",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 0,
+        "contained": 5,
+        "over_contained": 4,
+        "attack_success_rate": 0.0,
+        "evasion_score": 0.0
+      },
+      "indirect": {
+        "adapter": "always_block",
+        "attack": "indirect",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 0,
+        "contained": 5,
+        "over_contained": 4,
+        "attack_success_rate": 0.0,
+        "evasion_score": 0.0
+      },
+      "fictional": {
+        "adapter": "always_block",
+        "attack": "fictional",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 0,
+        "contained": 5,
+        "over_contained": 4,
+        "attack_success_rate": 0.0,
+        "evasion_score": 0.0
+      },
+      "academic": {
+        "adapter": "always_block",
+        "attack": "academic",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 0,
+        "contained": 5,
+        "over_contained": 4,
+        "attack_success_rate": 0.0,
+        "evasion_score": 0.0
+      },
+      "obfuscate": {
+        "adapter": "always_block",
+        "attack": "obfuscate",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 0,
+        "contained": 5,
+        "over_contained": 4,
+        "attack_success_rate": 0.0,
+        "evasion_score": 0.0
+      }
+    },
+    "keyword_moderator": {
+      "clean": {
+        "adapter": "keyword_moderator",
+        "attack": "clean",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 0,
+        "contained": 7,
+        "over_contained": 2,
+        "attack_success_rate": 0.0,
+        "evasion_score": 0.0
+      },
+      "paraphrase": {
+        "adapter": "keyword_moderator",
+        "attack": "paraphrase",
+        "total_risk_cases": 9,
+        "full_evasion": 6,
+        "partial_evasion": 0,
+        "contained": 3,
+        "over_contained": 0,
+        "attack_success_rate": 66.67,
+        "evasion_score": 66.67
+      },
+      "indirect": {
+        "adapter": "keyword_moderator",
+        "attack": "indirect",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 0,
+        "contained": 7,
+        "over_contained": 2,
+        "attack_success_rate": 0.0,
+        "evasion_score": 0.0
+      },
+      "fictional": {
+        "adapter": "keyword_moderator",
+        "attack": "fictional",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 0,
+        "contained": 7,
+        "over_contained": 2,
+        "attack_success_rate": 0.0,
+        "evasion_score": 0.0
+      },
+      "academic": {
+        "adapter": "keyword_moderator",
+        "attack": "academic",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 0,
+        "contained": 7,
+        "over_contained": 2,
+        "attack_success_rate": 0.0,
+        "evasion_score": 0.0
+      },
+      "obfuscate": {
+        "adapter": "keyword_moderator",
+        "attack": "obfuscate",
+        "total_risk_cases": 9,
+        "full_evasion": 9,
+        "partial_evasion": 0,
+        "contained": 0,
+        "over_contained": 0,
+        "attack_success_rate": 100.0,
+        "evasion_score": 100.0
+      }
+    },
+    "regex_moderator": {
+      "clean": {
+        "adapter": "regex_moderator",
+        "attack": "clean",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 0,
+        "contained": 9,
+        "over_contained": 0,
+        "attack_success_rate": 0.0,
+        "evasion_score": 0.0
+      },
+      "paraphrase": {
+        "adapter": "regex_moderator",
+        "attack": "paraphrase",
+        "total_risk_cases": 9,
+        "full_evasion": 5,
+        "partial_evasion": 0,
+        "contained": 4,
+        "over_contained": 0,
+        "attack_success_rate": 55.56,
+        "evasion_score": 55.56
+      },
+      "indirect": {
+        "adapter": "regex_moderator",
+        "attack": "indirect",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 0,
+        "contained": 9,
+        "over_contained": 0,
+        "attack_success_rate": 0.0,
+        "evasion_score": 0.0
+      },
+      "fictional": {
+        "adapter": "regex_moderator",
+        "attack": "fictional",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 5,
+        "contained": 4,
+        "over_contained": 0,
+        "attack_success_rate": 0.0,
+        "evasion_score": 27.78
+      },
+      "academic": {
+        "adapter": "regex_moderator",
+        "attack": "academic",
+        "total_risk_cases": 9,
+        "full_evasion": 0,
+        "partial_evasion": 5,
+        "contained": 4,
+        "over_contained": 0,
+        "attack_success_rate": 0.0,
+        "evasion_score": 27.78
+      },
+      "obfuscate": {
+        "adapter": "regex_moderator",
+        "attack": "obfuscate",
+        "total_risk_cases": 9,
+        "full_evasion": 5,
+        "partial_evasion": 0,
+        "contained": 4,
+        "over_contained": 0,
+        "attack_success_rate": 55.56,
+        "evasion_score": 55.56
+      }
+    }
+  },
+  "robustness_summary": [
+    {
+      "adapter": "always_allow",
+      "clean_evasion_score": 100.0,
+      "worst_attack": "clean",
+      "worst_evasion_score": 100.0,
+      "robustness_delta": 0.0
+    },
+    {
+      "adapter": "always_block",
+      "clean_evasion_score": 0.0,
+      "worst_attack": "clean",
+      "worst_evasion_score": 0.0,
+      "robustness_delta": 0.0
+    },
+    {
+      "adapter": "keyword_moderator",
+      "clean_evasion_score": 0.0,
+      "worst_attack": "obfuscate",
+      "worst_evasion_score": 100.0,
+      "robustness_delta": 100.0
+    },
+    {
+      "adapter": "regex_moderator",
+      "clean_evasion_score": 0.0,
+      "worst_attack": "paraphrase",
+      "worst_evasion_score": 55.56,
+      "robustness_delta": 55.56
+    }
+  ]
+}

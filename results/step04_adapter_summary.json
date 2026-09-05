@@ -1,0 +1,143 @@
+{
+  "generated_at": "2026-09-05T12:00:51.779067+00:00",
+  "step": "step04_severity_scoring",
+  "seed_file": "D:\\adversarial-safety-lab\\data\\seeds.jsonl",
+  "seed_count": 15,
+  "potential_risk": 27.0,
+  "safety_weight": 0.8,
+  "usability_weight": 0.2,
+  "adapters": [
+    {
+      "adapter": "always_allow",
+      "total_cases": 15,
+      "correct": 6,
+      "accuracy": 40.0,
+      "potential_risk": 27.0,
+      "realized_risk": 25.25,
+      "risk_percent": 93.52,
+      "safety_score": 6.48,
+      "friction_count": 0,
+      "friction_rate": 0.0,
+      "usability_score": 100.0,
+      "composite_score": 25.18,
+      "safety_failure_count": 9,
+      "errors": {
+        "false_positive": 0,
+        "false_negative": 5,
+        "missed_review": 4,
+        "over_block": 0,
+        "unnecessary_review": 0,
+        "under_block": 0
+      },
+      "action_distribution": {
+        "allow": 15,
+        "review": 0,
+        "block": 0
+      },
+      "rates": {
+        "auto_allow_rate": 100.0,
+        "human_review_rate": 0.0,
+        "auto_block_rate": 0.0
+      }
+    },
+    {
+      "adapter": "always_block",
+      "total_cases": 15,
+      "correct": 5,
+      "accuracy": 33.33,
+      "potential_risk": 27.0,
+      "realized_risk": 0.0,
+      "risk_percent": 0.0,
+      "safety_score": 100.0,
+      "friction_count": 10,
+      "friction_rate": 66.67,
+      "usability_score": 33.33,
+      "composite_score": 86.67,
+      "safety_failure_count": 0,
+      "errors": {
+        "false_positive": 6,
+        "false_negative": 0,
+        "missed_review": 0,
+        "over_block": 4,
+        "unnecessary_review": 0,
+        "under_block": 0
+      },
+      "action_distribution": {
+        "allow": 0,
+        "review": 0,
+        "block": 15
+      },
+      "rates": {
+        "auto_allow_rate": 0.0,
+        "human_review_rate": 0.0,
+        "auto_block_rate": 100.0
+      }
+    },
+    {
+      "adapter": "keyword_moderator",
+      "total_cases": 15,
+      "correct": 10,
+      "accuracy": 66.67,
+      "potential_risk": 27.0,
+      "realized_risk": 0.0,
+      "risk_percent": 0.0,
+      "safety_score": 100.0,
+      "friction_count": 5,
+      "friction_rate": 33.33,
+      "usability_score": 66.67,
+      "composite_score": 93.33,
+      "safety_failure_count": 0,
+      "errors": {
+        "false_positive": 2,
+        "false_negative": 0,
+        "missed_review": 0,
+        "over_block": 2,
+        "unnecessary_review": 1,
+        "under_block": 0
+      },
+      "action_distribution": {
+        "allow": 3,
+        "review": 3,
+        "block": 9
+      },
+      "rates": {
+        "auto_allow_rate": 20.0,
+        "human_review_rate": 20.0,
+        "auto_block_rate": 60.0
+      }
+    },
+    {
+      "adapter": "regex_moderator",
+      "total_cases": 15,
+      "correct": 15,
+      "accuracy": 100.0,
+      "potential_risk": 27.0,
+      "realized_risk": 0.0,
+      "risk_percent": 0.0,
+      "safety_score": 100.0,
+      "friction_count": 0,
+      "friction_rate": 0.0,
+      "usability_score": 100.0,
+      "composite_score": 100.0,
+      "safety_failure_count": 0,
+      "errors": {
+        "false_positive": 0,
+        "false_negative": 0,
+        "missed_review": 0,
+        "over_block": 0,
+        "unnecessary_review": 0,
+        "under_block": 0
+      },
+      "action_distribution": {
+        "allow": 6,
+        "review": 4,
+        "block": 5
+      },
+      "rates": {
+        "auto_allow_rate": 40.0,
+        "human_review_rate": 26.67,
+        "auto_block_rate": 33.33
+      }
+    }
+  ]
+}

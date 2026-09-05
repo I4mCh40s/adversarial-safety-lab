@@ -1,0 +1,78 @@
+{
+  "step": "step06_llm_moderator",
+  "model": "qwen3.5:0.8b",
+  "base_url": "http://localhost:11434",
+  "seed_count": 15,
+  "limit": 0,
+  "potential_risk": 27.0,
+  "adapters": [
+    {
+      "adapter": "ollama_qwen3.5_0.8b",
+      "total_cases": 15,
+      "correct": 4,
+      "accuracy": 26.67,
+      "potential_risk": 27.0,
+      "realized_risk": 10.0,
+      "risk_percent": 37.04,
+      "safety_score": 62.96,
+      "friction_count": 6,
+      "friction_rate": 40.0,
+      "usability_score": 60.0,
+      "composite_score": 62.37,
+      "safety_failure_count": 5,
+      "errors": {
+        "false_positive": 0,
+        "false_negative": 0,
+        "missed_review": 0,
+        "over_block": 0,
+        "unnecessary_review": 6,
+        "under_block": 5
+      },
+      "action_distribution": {
+        "allow": 0,
+        "review": 15,
+        "block": 0
+      },
+      "rates": {
+        "auto_allow_rate": 0.0,
+        "human_review_rate": 100.0,
+        "auto_block_rate": 0.0
+      },
+      "elapsed_seconds": 50.34
+    },
+    {
+      "adapter": "regex_moderator",
+      "total_cases": 15,
+      "correct": 15,
+      "accuracy": 100.0,
+      "potential_risk": 27.0,
+      "realized_risk": 0.0,
+      "risk_percent": 0.0,
+      "safety_score": 100.0,
+      "friction_count": 0,
+      "friction_rate": 0.0,
+      "usability_score": 100.0,
+      "composite_score": 100.0,
+      "safety_failure_count": 0,
+      "errors": {
+        "false_positive": 0,
+        "false_negative": 0,
+        "missed_review": 0,
+        "over_block": 0,
+        "unnecessary_review": 0,
+        "under_block": 0
+      },
+      "action_distribution": {
+        "allow": 6,
+        "review": 4,
+        "block": 5
+      },
+      "rates": {
+        "auto_allow_rate": 40.0,
+        "human_review_rate": 26.67,
+        "auto_block_rate": 33.33
+      },
+      "elapsed_seconds": 0.0
+    }
+  ]
+}
