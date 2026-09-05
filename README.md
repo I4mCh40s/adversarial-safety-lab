@@ -1,18 +1,4 @@
-Below are two versions:
 
-1. **Long version** — full GitHub/portfolio-style `README.md`
-2. **Short version** — one-page summary / `README_SHORT.md` / recruiter version
-
-You can save them as:
-
-```text
-README.md
-README_SHORT.md
-```
-
----
-
-# Long version: `README.md`
 
 ```md
 # Adversarial AI Safety Lab
