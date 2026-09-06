@@ -1,51 +1,39 @@
 """
-Adversarial AI Safety Lab Dashboard
+Adversarial AI Safety Lab — Scientific Dashboard
 
-Reads Step 10 reverse arena reports from results/ and displays:
-- cross-model leaderboard
-- safety/evasion chart
-- strategy performance
-- full/partial evasion gallery
-- raw report inspector
+Reads all result files from results/ and displays:
+- Cross-model leaderboard
+- Failure taxonomy breakdown
+- Boundary distance maps
+- Multi-turn stress depth
+- Decision boundary search results
+- Trace explorer
 """
 
 import json
+import re
 from pathlib import Path
+from datetime import datetime
 
 import pandas as pd
 import streamlit as st
 
-
 # ── Paths ─────────────────────────────────────────────────────
-
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 RESULTS_DIR = BASE_DIR / "results"
 
 
-# ── Helpers ───────────────────────────────────────────────────
-
+# ── Data Loading ──────────────────────────────────────────────
 
 def clean_obj(obj):
-    """
-    Recursively strip whitespace from dictionary keys and string values.
-
-    This makes the dashboard robust if some JSON files contain keys like:
-      "seed_id ": "harmful_001 "
-    """
-
+    """Recursively strip whitespace from keys and string values."""
     if isinstance(obj, dict):
-        return {
-            str(key).strip(): clean_obj(value)
-            for key, value in obj.items()
-        }
-
+        return {str(k).strip(): clean_obj(v) for k, v in obj.items()}
     if isinstance(obj, list):
         return [clean_obj(item) for item in obj]
-
     if isinstance(obj, str):
         return obj.strip()
-
     return obj
 
 
@@ -63,126 +51,226 @@ def safe_int(value, default=0):
         return default
 
 
-# ── Data loading ──────────────────────────────────────────────
-
-
-@st.cache_data(show_spinner=False)
-def load_leaderboard() -> pd.DataFrame:
-    """
-    Load all Step 10 reverse arena reports and build a leaderboard.
-    """
+def load_all_reports():
+    """Load all JSON reports from the results directory."""
+    reports = {
+        "reverse_arena": [],
+        "jailbreak": [],
+        "taxonomy": [],
+        "boundary_distance": [],
+        "multiturn": [],
+        "boundary_search": [],
+    }
 
     if not RESULTS_DIR.exists():
-        return pd.DataFrame()
+        return reports
 
-    files = [
-        path
-        for path in RESULTS_DIR.glob("step10_reverse_arena*.json")
-        if path.name != "step10_reverse_arena_latest.json"
-    ]
-
-    files = sorted(files, key=lambda p: p.stat().st_mtime, reverse=True)
-
-    rows = []
-
-    for path in files:
+    for path in sorted(RESULTS_DIR.glob("*.json")):
         try:
             data = clean_obj(json.loads(path.read_text(encoding="utf-8")))
         except Exception:
             continue
 
-        stats = data.get("stats", {})
+        step = data.get("step", "")
+        filename = path.name
+
+        if "step10" in step or "reverse_arena" in filename:
+            reports["reverse_arena"].append({"file": filename, "data": data})
+        elif "step12" in step or "jailbreak" in filename:
+            reports["jailbreak"].append({"file": filename, "data": data})
+        elif "step13" in step or "taxonomy" in filename:
+            reports["taxonomy"].append({"file": filename, "data": data})
+        elif "step14" in step or "boundary_distance" in filename:
+            reports["boundary_distance"].append({"file": filename, "data": data})
+        elif "step15" in step or "multiturn" in filename:
+            reports["multiturn"].append({"file": filename, "data": data})
+        elif "step16" in step or "boundary_search" in filename:
+            reports["boundary_search"].append({"file": filename, "data": data})
+
+    return reports
+
+
+# ── Leaderboard Builder ──────────────────────────────────────
+
+def build_leaderboard(reports):
+    """Build a cross-model leaderboard from all available reports."""
+    rows = []
+
+    # From Step 10 (Reverse Arena)
+    for item in reports["reverse_arena"]:
+        data = item["data"]
         metrics = data.get("metrics", {})
+        stats = data.get("stats", {})
+        target = data.get("target_model", data.get("target", "unknown"))
+        attacker = data.get("attacker_model", "unknown")
 
-        target_model = (
-            data.get("target_model")
-            or data.get("target")
-            or "unknown_target"
-        )
+        rows.append({
+            "file": item["file"],
+            "source": "Reverse Arena (Step 10)",
+            "target_model": target,
+            "attacker_model": attacker,
+            "total_attacks": safe_int(stats.get("total_attack_attempts", 0)),
+            "full_evasion": safe_int(stats.get("full_evasion", 0)),
+            "partial_evasion": safe_int(stats.get("partial_evasion", 0)),
+            "contained": safe_int(stats.get("contained", 0)),
+            "over_contained": safe_int(stats.get("over_contained", 0)),
+            "attack_success_rate": safe_float(metrics.get("attack_success_rate", 0)),
+            "evasion_score": safe_float(metrics.get("evasion_score", 0)),
+            "safety_under_attack": safe_float(metrics.get("safety_under_attack", 0)),
+            "risk_percent": safe_float(metrics.get("risk_percent", 0)),
+        })
 
-        attacker_model = data.get("attacker_model", "unknown_attacker")
+    # From Step 16 (Boundary Search)
+    for item in reports["boundary_search"]:
+        data = item["data"]
+        report = data.get("report", {})
+        target = data.get("target_model", "unknown")
+        attacker = data.get("attacker_model", "unknown")
 
-        valid_target_decisions = safe_int(stats.get("valid_target_decisions", 0))
-        full_evasion = safe_int(stats.get("full_evasion", 0))
-        partial_evasion = safe_int(stats.get("partial_evasion", 0))
+        rows.append({
+            "file": item["file"],
+            "source": "Boundary Search (Step 16)",
+            "target_model": target,
+            "attacker_model": attacker,
+            "total_attacks": safe_int(report.get("total_seeds", 0)),
+            "full_evasion": safe_int(report.get("fully_collapsed", 0)),
+            "partial_evasion": safe_int(report.get("degraded", 0)) - safe_int(report.get("fully_collapsed", 0)),
+            "contained": safe_int(report.get("total_seeds", 0)) - safe_int(report.get("degraded", 0)),
+            "over_contained": 0,
+            "attack_success_rate": safe_float(report.get("collapse_rate", 0)),
+            "evasion_score": safe_float(report.get("degradation_rate", 0)),
+            "safety_under_attack": 100 - safe_float(report.get("collapse_rate", 0)),
+            "risk_percent": safe_float(report.get("collapse_rate", 0)),
+        })
 
-        attack_success_rate = metrics.get("attack_success_rate")
-        if attack_success_rate is None:
-            attack_success_rate = (
-                round(full_evasion / valid_target_decisions * 100, 2)
-                if valid_target_decisions > 0
-                else 0.0
-            )
+    # From Step 12 (Jailbreak)
+    for item in reports["jailbreak"]:
+        data = item["data"]
+        target = data.get("target_model", "unknown")
+        attacker = data.get("attacker_model", "unknown")
+        total = safe_int(data.get("total_seeds", 0))
+        successes = safe_int(data.get("successful_jailbreaks", 0))
+        asr = safe_float(data.get("jailbreak_success_rate", 0))
 
-        evasion_score = metrics.get("evasion_score")
-        if evasion_score is None:
-            evasion_score = (
-                round(
-                    (full_evasion + 0.5 * partial_evasion)
-                    / valid_target_decisions
-                    * 100,
-                    2,
-                )
-                if valid_target_decisions > 0
-                else 0.0
-            )
-
-        rows.append(
-            {
-                "file": path.name,
-                "modified": pd.Timestamp.fromtimestamp(path.stat().st_mtime).strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                ),
-                "target": target_model,
-                "attacker": attacker_model,
-                "rounds": safe_int(data.get("rounds", 0)),
-                "total_attempts": safe_int(stats.get("total_attack_attempts", 0)),
-                "valid_target_decisions": valid_target_decisions,
-                "full_evasion": full_evasion,
-                "partial_evasion": partial_evasion,
-                "contained": safe_int(stats.get("contained", 0)),
-                "target_invalid": safe_int(stats.get("target_invalid", 0)),
-                "attack_success_rate": safe_float(attack_success_rate),
-                "evasion_score": safe_float(evasion_score),
-                "safety_under_attack": safe_float(metrics.get("safety_under_attack", 0)),
-                "risk_percent": safe_float(metrics.get("risk_percent", 0)),
-                "realized_risk": safe_float(metrics.get("realized_risk", 0)),
-                "potential_risk": safe_float(metrics.get("potential_risk", 0)),
-            }
-        )
+        rows.append({
+            "file": item["file"],
+            "source": "Jailbreak (Step 12)",
+            "target_model": target,
+            "attacker_model": attacker,
+            "total_attacks": total,
+            "full_evasion": successes,
+            "partial_evasion": 0,
+            "contained": total - successes,
+            "over_contained": 0,
+            "attack_success_rate": asr,
+            "evasion_score": asr,
+            "safety_under_attack": 100 - asr,
+            "risk_percent": asr,
+        })
 
     if not rows:
         return pd.DataFrame()
 
-    df = pd.DataFrame(rows)
-
-    df = df.sort_values(
-        by=["safety_under_attack", "attack_success_rate"],
-        ascending=[False, True],
-    )
-
-    return df
+    return pd.DataFrame(rows)
 
 
-@st.cache_data(show_spinner=False)
-def load_report(file_name: str):
-    """
-    Load one full report.
-    """
+# ── Taxonomy Builder ─────────────────────────────────────────
 
-    path = RESULTS_DIR / file_name
+def build_taxonomy_view(reports):
+    """Build taxonomy breakdown from Step 13 results."""
+    rows = []
 
-    if not path.exists():
-        return {}
+    for item in reports["taxonomy"]:
+        data = item["data"]
+        report = data.get("report", {})
+        target = data.get("target_model", "unknown")
+        cat_counts = report.get("category_counts", {})
 
-    try:
-        return clean_obj(json.loads(path.read_text(encoding="utf-8")))
-    except Exception:
-        return {}
+        for category, count in cat_counts.items():
+            if count > 0:
+                rows.append({
+                    "file": item["file"],
+                    "target_model": target,
+                    "category": category,
+                    "count": count,
+                })
+
+    if not rows:
+        return pd.DataFrame()
+
+    return pd.DataFrame(rows)
+
+
+# ── Boundary Search Detail ───────────────────────────────────
+
+def build_boundary_chains(reports):
+    """Build transformation chain details from Step 16."""
+    rows = []
+
+    for item in reports["boundary_search"]:
+        data = item["data"]
+        target = data.get("target_model", "unknown")
+        results = data.get("results", [])
+
+        for r in results:
+            chain = r.get("transformation_chain", [])
+            chain_str = " → ".join(
+                f"{step.get('strategy', '?')}: {step.get('prev_action', '?')}→{step.get('curr_action', '?')}"
+                for step in chain
+            )
+
+            rows.append({
+                "file": item["file"],
+                "target_model": target,
+                "seed_id": r.get("seed_id", ""),
+                "seed_category": r.get("seed_category", ""),
+                "seed_severity": r.get("seed_severity", 0),
+                "initial_action": r.get("initial_action", ""),
+                "final_action": r.get("final_action", ""),
+                "full_collapse": r.get("full_collapse", False),
+                "chain_length": r.get("chain_length", 0),
+                "total_reward": safe_float(r.get("total_reward", 0)),
+                "chain_summary": chain_str,
+            })
+
+    if not rows:
+        return pd.DataFrame()
+
+    return pd.DataFrame(rows)
+
+
+# ── Multi-Turn Detail ────────────────────────────────────────
+
+def build_multiturn_view(reports):
+    """Build multi-turn pressure details from Step 15."""
+    rows = []
+
+    for item in reports["multiturn"]:
+        data = item["data"]
+        target = data.get("target_model", "unknown")
+        results = data.get("results", [])
+        report = data.get("report", {})
+
+        for r in results:
+            rows.append({
+                "file": item["file"],
+                "target_model": target,
+                "seed_id": r.get("seed_id", ""),
+                "seed_category": r.get("seed_category", ""),
+                "initial_action": r.get("initial_action", ""),
+                "final_action": r.get("final_action", ""),
+                "safety_stress_depth": r.get("safety_stress_depth"),
+                "total_turns": r.get("total_turns", 0),
+                "failed": r.get("failed", False),
+            })
+
+    if not rows:
+        return pd.DataFrame()
+
+    return pd.DataFrame(rows)
 
 
 # ── UI ────────────────────────────────────────────────────────
-
 
 st.set_page_config(
     page_title="Adversarial AI Safety Lab",
@@ -191,319 +279,262 @@ st.set_page_config(
 )
 
 st.title("🛡️ Adversarial AI Safety Lab")
-
 st.caption(
-    "Cross-model red-teaming leaderboard for LLM moderation targets. "
-    "Reports are loaded from results/step10_reverse_arena*.json"
+    "Scientific adversarial robustness benchmarking for LLM moderation systems. "
+    "Cross-model evaluation with failure taxonomy, boundary distance mapping, and decision boundary search."
 )
 
-st.sidebar.header("Controls")
+# Load data
+with st.spinner("Loading reports..."):
+    reports = load_all_reports()
 
-if st.sidebar.button("🔄 Refresh reports"):
-    st.cache_data.clear()
+total_reports = sum(len(v) for v in reports.values())
 
-leaderboard = load_leaderboard()
-
-if leaderboard.empty:
+if total_reports == 0:
     st.warning(
-        "No Step 10 reverse arena reports found.\n\n"
-        "Expected files like:\n\n"
-        "results/step10_reverse_arena_granite4.1_3b_20260906_143022.json\n\n"
-        "Run:\n\n"
-        "python steps/step10_uncensored_seed_factory_and_reverse_arena.py attack --target ollama --target-model granite4.1:3b"
+        "No result files found in `results/`. "
+        "Run the evaluation pipeline first:\n\n"
+        "```bash\npython steps/step17_batch_runner.py granite4.2:3b\n```"
     )
     st.stop()
 
-# ── Leaderboard ───────────────────────────────────────────────
+st.sidebar.header("Controls")
+st.sidebar.info(f"📁 {total_reports} reports loaded")
 
+if st.sidebar.button("🔄 Refresh"):
+    st.cache_data.clear()
+    st.rerun()
 
-st.subheader("Model Leaderboard")
-
-leaderboard_cols = [
-    "file",
-    "modified",
-    "target",
-    "attacker",
-    "rounds",
-    "total_attempts",
-    "valid_target_decisions",
-    "full_evasion",
-    "partial_evasion",
-    "contained",
-    "attack_success_rate",
-    "evasion_score",
-    "safety_under_attack",
-    "risk_percent",
-]
-
-st.dataframe(
-    leaderboard[leaderboard_cols],
-    use_container_width=True,
-    hide_index=True,
-)
-
-
-# ── Chart ─────────────────────────────────────────────────────
-
-
-st.subheader("Safety / Evasion Chart")
-
-chart_df = leaderboard.set_index("file")[
-    [
-        "safety_under_attack",
-        "attack_success_rate",
-        "evasion_score",
-    ]
-]
-
-st.bar_chart(chart_df)
-
-
-# ── Report inspector ──────────────────────────────────────────
-
-
-st.subheader("Report Inspector")
-
-selected_file = st.selectbox(
-    "Select a report",
-    leaderboard["file"].tolist(),
-)
-
-report = load_report(selected_file)
-
-if not report:
-    st.error("Could not load selected report.")
-    st.stop()
-
-stats = report.get("stats", {})
-metrics = report.get("metrics", {})
-traces = report.get("traces", [])
-
-col1, col2, col3, col4 = st.columns(4)
-
-col1.metric(
-    "Safety Under Attack",
-    f"{safe_float(metrics.get('safety_under_attack', 0)):.1f}",
-)
-
-col2.metric(
-    "Attack Success Rate",
-    f"{safe_float(metrics.get('attack_success_rate', 0)):.1f}%",
-)
-
-col3.metric(
-    "Evasion Score",
-    f"{safe_float(metrics.get('evasion_score', 0)):.1f}%",
-)
-
-col4.metric(
-    "Valid Target Decisions",
-    safe_int(stats.get("valid_target_decisions", 0)),
-)
-
-st.write(
-    f"**Target:** `{report.get('target_model') or report.get('target')}`  \n"
-    f"**Attacker:** `{report.get('attacker_model')}`  \n"
-    f"**Rounds:** `{report.get('rounds')}`  \n"
-    f"**Seed file:** `{report.get('seed_file')}`"
-)
-
+# Build views
+leaderboard = build_leaderboard(reports)
+taxonomy_df = build_taxonomy_view(reports)
+boundary_chains = build_boundary_chains(reports)
+multiturn_df = build_multiturn_view(reports)
 
 # ── Tabs ──────────────────────────────────────────────────────
 
+tab_leaderboard, tab_taxonomy, tab_boundary, tab_multiturn, tab_chains, tab_explorer = st.tabs([
+    "🏆 Leaderboard",
+    "📊 Failure Taxonomy",
+    "📉 Boundary Distance",
+    "🔄 Multi-Turn Pressure",
+    "🔗 Boundary Search Chains",
+    "🔍 Trace Explorer",
+])
 
-tab_traces, tab_strategy, tab_evasions, tab_raw = st.tabs(
-    [
-        "Traces",
-        "Strategy Performance",
-        "Evasion Gallery",
-        "Raw JSON",
-    ]
-)
+# ── Tab 1: Leaderboard ───────────────────────────────────────
 
+with tab_leaderboard:
+    st.subheader("Cross-Model Leaderboard")
 
-# ── Traces tab ────────────────────────────────────────────────
-
-
-with tab_traces:
-    if not traces:
-        st.info("No traces found in this report.")
+    if leaderboard.empty:
+        st.info("No leaderboard data available yet.")
     else:
-        trace_df = pd.json_normalize(traces)
+        # Summary metrics
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Models Tested", leaderboard["target_model"].nunique())
+        col2.metric("Total Reports", len(leaderboard))
+        col3.metric("Total Attacks", int(leaderboard["total_attacks"].sum()))
+        col4.metric("Avg Safety Score", f"{leaderboard['safety_under_attack'].mean():.1f}%")
 
-        preferred_cols = [
-            "round",
-            "seed_id",
-            "category",
-            "severity",
-            "expected_action",
-            "strategy",
-            "outcome",
-            "target_action",
-            "target_valid",
-            "risk_score",
-            "original_text",
-            "transformed_text",
+        # Sort controls
+        sort_col = st.selectbox(
+            "Sort by",
+            options=["safety_under_attack", "attack_success_rate", "evasion_score", "total_attacks"],
+            index=0,
+        )
+        ascending = sort_col in ["attack_success_rate", "evasion_score"]
+
+        sorted_lb = leaderboard.sort_values(sort_col, ascending=ascending)
+
+        # Display table
+        display_cols = [
+            "target_model", "source", "total_attacks",
+            "full_evasion", "partial_evasion", "contained",
+            "attack_success_rate", "safety_under_attack",
         ]
+        available_cols = [c for c in display_cols if c in sorted_lb.columns]
+        st.dataframe(sorted_lb[available_cols], use_container_width=True, hide_index=True)
 
-        available_cols = [col for col in preferred_cols if col in trace_df.columns]
+        # Chart
+        st.subheader("Safety Score Comparison")
+        chart_data = sorted_lb.set_index("target_model")["safety_under_attack"]
+        st.bar_chart(chart_data)
 
-        st.dataframe(
-            trace_df[available_cols],
-            use_container_width=True,
-            hide_index=True,
-        )
+# ── Tab 2: Failure Taxonomy ──────────────────────────────────
 
-        st.download_button(
-            label="Download traces as CSV",
-            data=trace_df.to_csv(index=False).encode("utf-8"),
-            file_name=f"{Path(selected_file).stem}_traces.csv",
-            mime="text/csv",
-        )
+with tab_taxonomy:
+    st.subheader("Failure Taxonomy Breakdown")
 
-
-# ── Strategy performance tab ─────────────────────────────────
-
-
-with tab_strategy:
-    if not traces:
-        st.info("No traces found in this report.")
+    if taxonomy_df.empty:
+        st.info("No taxonomy data available. Run Step 13 first.")
     else:
-        strategy_df = pd.DataFrame(traces)
+        # Group by target model
+        for target in taxonomy_df["target_model"].unique():
+            st.markdown(f"#### Target: `{target}`")
+            target_data = taxonomy_df[taxonomy_df["target_model"] == target]
 
-        if "strategy" not in strategy_df.columns or "outcome" not in strategy_df.columns:
-            st.info("This report does not contain strategy/outcome fields.")
-        else:
-            strategy_summary = (
-                strategy_df.groupby("strategy")
-                .agg(
-                    attempts=("strategy", "size"),
-                    full_evasion=(
-                        "outcome",
-                        lambda s: (s == "full_evasion").sum(),
-                    ),
-                    partial_evasion=(
-                        "outcome",
-                        lambda s: (s == "partial_evasion").sum(),
-                    ),
-                    contained=(
-                        "outcome",
-                        lambda s: (s == "contained").sum(),
-                    ),
-                    target_invalid=(
-                        "outcome",
-                        lambda s: (s == "target_invalid").sum(),
-                    ),
-                )
-                .reset_index()
-            )
+            # Pie chart
+            chart_df = target_data.set_index("category")["count"]
+            col1, col2 = st.columns(2)
 
-            strategy_summary["full_evasion_rate"] = (
-                strategy_summary["full_evasion"]
-                / strategy_summary["attempts"]
-                * 100
-            ).round(1)
+            with col1:
+                st.bar_chart(chart_df)
 
-            strategy_summary["evasion_score"] = (
-                (
-                    strategy_summary["full_evasion"]
-                    + 0.5 * strategy_summary["partial_evasion"]
-                )
-                / strategy_summary["attempts"]
-                * 100
-            ).round(1)
+            with col2:
+                total = target_data["count"].sum()
+                for _, row in target_data.iterrows():
+                    pct = (row["count"] / total * 100) if total > 0 else 0
+                    st.write(f"**{row['category']}**: {row['count']} ({pct:.1f}%)")
 
-            strategy_summary = strategy_summary.sort_values(
-                by=["evasion_score", "full_evasion_rate"],
-                ascending=[False, False],
-            )
+            st.divider()
 
-            st.dataframe(
-                strategy_summary,
-                use_container_width=True,
-                hide_index=True,
-            )
+# ── Tab 3: Boundary Distance ─────────────────────────────────
 
-            st.bar_chart(
-                strategy_summary.set_index("strategy")[
-                    [
-                        "full_evasion",
-                        "partial_evasion",
-                        "contained",
-                    ]
-                ]
-            )
+with tab_boundary:
+    st.subheader("Boundary Distance Maps")
 
-
-# ── Evasion gallery tab ──────────────────────────────────────
-
-
-with tab_evasions:
-    if not traces:
-        st.info("No traces found in this report.")
+    if boundary_chains.empty:
+        st.info("No boundary distance data available. Run Steps 14 or 16 first.")
     else:
-        evasion_filter = st.radio(
-            "Show",
-            options=[
-                "Full evasions only",
-                "Full + partial evasions",
-                "All failed containment",
-            ],
+        for target in boundary_chains["target_model"].unique():
+            st.markdown(f"#### Target: `{target}`")
+            target_data = boundary_chains[boundary_chains["target_model"] == target]
+
+            # Summary metrics
+            total = len(target_data)
+            collapsed = target_data["full_collapse"].sum()
+            avg_chain = target_data["chain_length"].mean()
+
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Seeds Tested", total)
+            col2.metric("Full Collapses", int(collapsed))
+            col3.metric("Avg Chain Length", f"{avg_chain:.1f}")
+
+            # Table
+            display_cols = [
+                "seed_id", "seed_category", "seed_severity",
+                "initial_action", "final_action", "full_collapse",
+                "chain_length", "total_reward",
+            ]
+            available = [c for c in display_cols if c in target_data.columns]
+            st.dataframe(target_data[available], use_container_width=True, hide_index=True)
+
+            st.divider()
+
+# ── Tab 4: Multi-Turn Pressure ───────────────────────────────
+
+with tab_multiturn:
+    st.subheader("Multi-Turn Pressure (Safety Stress Depth)")
+
+    if multiturn_df.empty:
+        st.info("No multi-turn data available. Run Step 15 first.")
+    else:
+        for target in multiturn_df["target_model"].unique():
+            st.markdown(f"#### Target: `{target}`")
+            target_data = multiturn_df[multiturn_df["target_model"] == target]
+
+            failed = target_data["failed"].sum()
+            total = len(target_data)
+            depths = target_data["safety_stress_depth"].dropna()
+
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Seeds Tested", total)
+            col2.metric("Failed Under Pressure", int(failed))
+            col3.metric("Avg Stress Depth", f"{depths.mean():.1f}" if len(depths) > 0 else "N/A")
+
+            # Table
+            display_cols = [
+                "seed_id", "seed_category", "initial_action", "final_action",
+                "safety_stress_depth", "total_turns", "failed",
+            ]
+            available = [c for c in display_cols if c in target_data.columns]
+            st.dataframe(target_data[available], use_container_width=True, hide_index=True)
+
+            st.divider()
+
+# ── Tab 5: Boundary Search Chains ────────────────────────────
+
+with tab_chains:
+    st.subheader("Decision Boundary Search — Transformation Chains")
+
+    if boundary_chains.empty:
+        st.info("No boundary search data available. Run Step 16 first.")
+    else:
+        # Filter by collapse status
+        filter_option = st.radio(
+            "Filter",
+            options=["All", "Full Collapses Only", "Held (No Collapse)"],
             horizontal=True,
         )
 
-        if evasion_filter == "Full evasions only":
-            evasion_outcomes = {"full_evasion"}
-        elif evasion_filter == "Full + partial evasions":
-            evasion_outcomes = {"full_evasion", "partial_evasion"}
-        else:
-            evasion_outcomes = {
-                "full_evasion",
-                "partial_evasion",
-                "target_invalid",
-                "over_contained",
-            }
+        filtered = boundary_chains.copy()
+        if filter_option == "Full Collapses Only":
+            filtered = filtered[filtered["full_collapse"] == True]
+        elif filter_option == "Held (No Collapse)":
+            filtered = filtered[filtered["full_collapse"] == False]
 
-        evasions = [
-            trace
-            for trace in traces
-            if trace.get("outcome") in evasion_outcomes
-        ]
+        for _, row in filtered.iterrows():
+            icon = "🚨" if row["full_collapse"] else "🛡️"
+            with st.expander(
+                f"{icon} {row['seed_id']} ({row['seed_category']}, sev={row['seed_severity']}) "
+                f"| {row['initial_action']} → {row['final_action']} "
+                f"| Chain: {row['chain_length']} steps"
+            ):
+                st.write(f"**Chain:** {row['chain_summary']}")
+                st.write(f"**Total Reward:** {row['total_reward']}")
 
-        if not evasions:
-            st.success("No matching evasions found in this report.")
-        else:
-            st.write(f"Found **{len(evasions)}** matching traces.")
+# ── Tab 6: Trace Explorer ────────────────────────────────────
 
-            for trace in evasions:
-                seed_id = trace.get("seed_id", "unknown_seed")
-                strategy = trace.get("strategy", "unknown_strategy")
-                severity = trace.get("severity", "?")
-                outcome = trace.get("outcome", "unknown_outcome")
+with tab_explorer:
+    st.subheader("Trace Explorer")
 
-                with st.expander(
-                    f"{seed_id} | {strategy} | severity={severity} | {outcome}"
-                ):
-                    st.write("**Category:**", trace.get("category"))
-                    st.write("**Expected action:**", trace.get("expected_action"))
-                    st.write("**Target action:**", trace.get("target_action"))
-                    st.write("**Risk score:**", trace.get("risk_score"))
+    # Collect all traces from all reports
+    all_traces = []
 
-                    st.write("**Original text:**")
-                    st.code(trace.get("original_text", ""), language=None)
+    for category, items in reports.items():
+        for item in items:
+            data = item["data"]
+            traces = data.get("traces", data.get("results", []))
+            if isinstance(traces, list):
+                for trace in traces:
+                    if isinstance(trace, dict):
+                        trace["_source_file"] = item["file"]
+                        trace["_report_type"] = category
+                        all_traces.append(trace)
 
-                    st.write("**Transformed text:**")
-                    st.code(trace.get("transformed_text", ""), language=None)
+    if not all_traces:
+        st.info("No traces found.")
+    else:
+        st.write(f"Total traces available: **{len(all_traces)}**")
 
-                    target_raw = trace.get("target_raw", "")
+        # Filter by source
+        source_filter = st.selectbox(
+            "Filter by report type",
+            options=["All"] + list(set(t["_report_type"] for t in all_traces)),
+        )
 
-                    if target_raw:
-                        st.write("**Target raw response:**")
-                        st.code(target_raw, language="json")
+        filtered_traces = all_traces
+        if source_filter != "All":
+            filtered_traces = [t for t in all_traces if t["_report_type"] == source_filter]
 
+        # Convert to DataFrame for display
+        trace_df = pd.json_normalize(filtered_traces[:100])  # Limit to 100 for performance
 
-# ── Raw JSON tab ──────────────────────────────────────────────
+        if not trace_df.empty:
+            st.dataframe(trace_df, use_container_width=True, hide_index=True)
 
+            # Individual trace viewer
+            st.divider()
+            st.markdown("#### Individual Trace Viewer")
 
-with tab_raw:
-    st.json(report)
+            trace_idx = st.number_input(
+                "Trace index",
+                min_value=0,
+                max_value=len(filtered_traces) - 1,
+                value=0,
+            )
+
+            if 0 <= trace_idx < len(filtered_traces):
+                trace = filtered_traces[trace_idx]
+                st.json(trace)
